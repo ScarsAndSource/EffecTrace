@@ -16,6 +16,17 @@ Three guards live here that were bugs in the original spec:
    /scenario/generate endpoint with NetworkXUnfeasible. With it, the weakest
    cycle edge is silently removed and the topological sort always succeeds.
 
+FIX (post-review): get_dag_safe_graph() was added because run_monte_carlo()
+only ever pruned cycle/dangling edges from its own internal nx.DiGraph copy —
+it never wrote that pruning back onto the CausalGraphOutput object that gets
+returned to the frontend. That meant the browser could receive an edge list
+containing a cycle the backend had already (correctly) worked around for its
+own simulation, and graphPropagation.ts's Kahn's-algorithm sort would then
+silently drop every node trapped in that cycle to a flat zero outcome the
+moment a slider moved — diverging from the number shown a second earlier.
+scenario.py now calls get_dag_safe_graph() BEFORE returning or caching a
+graph, so the edge set the browser ever sees has already had cycles removed.
+
 Simulation design:
 - 500 samples (balance between variance estimate quality and Vercel function time)
 - Beta distribution parameterised via method-of-moments: α = mean/variance, β = (1-mean)/variance
@@ -133,6 +144,30 @@ def build_graph(graph_data: CausalGraphOutput) -> nx.DiGraph:
 
 
 # ──────────────────────────────────────────────
+#  Pruned-graph export — FIX: keep the response in sync with the simulation
+# ──────────────────────────────────────────────
+
+def get_dag_safe_graph(graph_data: CausalGraphOutput) -> CausalGraphOutput:
+    """
+    Returns a NEW CausalGraphOutput whose edges exactly match what build_graph()
+    + ensure_dag() would actually simulate on — i.e. with cycle edges and any
+    dangling/self-loop edges already removed.
+
+    Call this once, right after generate_causal_graph() returns, BEFORE the
+    graph is cached, persisted, or sent to the frontend. Every downstream
+    consumer (the initial response, Redis, Supabase, /scenario/narrate,
+    /scenario/simulate, and graphPropagation.ts on the client) then shares
+    one consistent edge set — there is no longer a backend-only "secretly
+    cleaned" copy that the frontend never sees.
+    """
+    G = build_graph(graph_data)
+    G = ensure_dag(G)
+    surviving = {(u, v) for u, v in G.edges()}
+    pruned_edges = [e for e in graph_data.edges if (e.source_id, e.target_id) in surviving]
+    return graph_data.model_copy(update={"edges": pruned_edges})
+
+
+# ──────────────────────────────────────────────
 #  Monte Carlo simulation
 # ──────────────────────────────────────────────
 
@@ -152,6 +187,11 @@ def run_monte_carlo(
     parameter_overrides: {node_id: scale_factor}
     Overriding node X means: multiply every edge where source_id == X by scale_factor.
     This is the slider contract — agreed upon before a line of frontend code is written.
+
+    Still independently calls build_graph()/ensure_dag() itself (rather than
+    trusting the caller pre-pruned), so this function stays safe to call on
+    its own from simulate.py or anywhere else — get_dag_safe_graph() is what
+    keeps the RESPONSE edge set in sync, this is what keeps the MATH safe.
 
     Returns: {node_id: {mean, p10, p90, std}}
     """

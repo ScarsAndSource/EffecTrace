@@ -85,15 +85,38 @@ export default function ScenarioPage() {
     setOverrides(next);
   }
 
-  function handleGenerateNarrative() {
+  /**
+   * FIX (post-review): this previously had no branch for live mode at all —
+   * clicking "Generate Board Memo" against a real backend session silently
+   * did nothing. Now calls POST /scenario/narrate via apiClient.ts.
+   */
+  async function handleGenerateNarrative() {
     if (DEMO_MODE || sessionId === DEMO_SESSION_ID) {
       setNarrativeLoading(true);
+      setNarrativeError(null);
       setTimeout(() => {
         setNarrative(getDemoNarrative());
         setNarrativeLoading(false);
         setNarrativeOpen(true);
       }, 600);
       return;
+    }
+
+    setNarrativeLoading(true);
+    setNarrativeError(null);
+    try {
+      const { narrateScenario } = await import("@/lib/apiClient");
+      const response = await narrateScenario(sessionId);
+      setNarrative(response.narrative);
+      setNarrativeOpen(true);
+    } catch (err) {
+      console.error("Narration failed:", err);
+      setNarrativeError(
+        err instanceof Error ? err.message : "Narration failed. Please try again."
+      );
+      setNarrativeOpen(true);
+    } finally {
+      setNarrativeLoading(false);
     }
   }
 

@@ -55,7 +55,7 @@ export default function HomePage() {
         </h1>
         <p className="mt-3 font-sans text-base leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
           Type one business decision. Watch a causal web of its likely cascading consequences
-          bloom outward in real time \u2014 color-coded by confidence, adjustable by slider,
+          bloom outward in real time — color-coded by confidence, adjustable by slider,
           narrated into a board memo on demand.
         </p>
       </div>
@@ -70,7 +70,7 @@ export default function HomePage() {
             <div className="h-2.5 w-2.5 animate-pulse rounded-full delay-150" style={{ background: "var(--color-decision-root)" }} />
           </div>
           <span className="font-sans text-xs" style={{ color: "var(--color-text-muted)" }}>
-            Mapping direct effects\u2026
+            Mapping direct effects…
           </span>
         </div>
       )}
@@ -80,7 +80,7 @@ export default function HomePage() {
           className="rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wider"
           style={{ borderColor: "var(--color-tier-data-grounded)", color: "var(--color-tier-data-grounded)" }}
         >
-          {DEMO_MODE ? "Demo Mode \u2014 no live backend" : "Live mode"}
+          {DEMO_MODE ? "Demo Mode — no live backend" : "Live mode"}
         </span>
       </div>
     </main>
