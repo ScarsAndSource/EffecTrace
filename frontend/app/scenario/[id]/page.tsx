@@ -10,6 +10,7 @@ import GraphControls from "@/components/GraphControls";
 import NarrativePanel, { GenerateMemoButton } from "@/components/NarrativePanel";
 import CalibrationMock from "@/components/CalibrationMock";
 import { runClientSimulation } from "@/lib/graphPropagation";
+import { domainHue } from "@/lib/visualTokens";
 import {
   DEMO_MODE,
   DEMO_SESSION_ID,
@@ -21,6 +22,7 @@ import type {
   OutcomeMap,
   ParameterOverrides,
   ConfidenceTier,
+  Domain,
 } from "@/lib/types";
 
 function loadFromStorage<T>(key: string): T | null {
@@ -120,26 +122,117 @@ export default function ScenarioPage() {
     }
   }
 
+  // Derived stat-strip values — pure computation, no new state
+  const consequenceCount = graph.nodes.filter((n) => n.id !== "decision_root").length;
+  const domainCount = new Set(graph.nodes.map((n) => n.domain)).size;
+  const speculativeCount = graph.nodes.filter((n) => n.confidence_tier === "speculative").length;
+  const horizonMin = Math.min(...graph.edges.map((e) => e.time_horizon_days));
+  const horizonMax = Math.max(...graph.edges.map((e) => e.time_horizon_days));
+
+  // Domain distribution bar data
+  const domainCounts = graph.nodes
+    .filter((n) => n.id !== "decision_root")
+    .reduce<Record<string, number>>((acc, n) => {
+      acc[n.domain] = (acc[n.domain] ?? 0) + 1;
+      return acc;
+    }, {});
+  const totalDomainNodes = Object.values(domainCounts).reduce((s, c) => s + c, 0);
+
   return (
     <main
       className="relative min-h-screen pb-24"
       style={{ background: "var(--color-bg)" }}
     >
-      <header className="flex items-center justify-between px-6 py-4">
+      <header className="border-b px-6 py-5" style={{ borderColor: "var(--color-border)" }}>
         <Link
           href="/"
-          className="font-display text-lg font-medium no-underline"
-          style={{ color: "var(--color-text-primary)" }}
+          className="mb-3 inline-flex items-center gap-1.5 font-mono text-xs no-underline"
+          style={{ color: "var(--color-text-muted)" }}
         >
-          Butterfly Effect
+          ← Butterfly Effect
         </Link>
-        <span className="font-sans text-xs" style={{ color: "var(--color-text-muted)" }}>
-          {graph.decision_summary}
-        </span>
+
+        <div className="flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <h1
+              className="mt-1 font-display text-xl font-medium leading-snug"
+              style={{ color: "var(--color-text-primary)" }}
+            >
+              {graph.decision_summary}
+            </h1>
+
+            {/* Stat strip — all derived from graph, no new API calls */}
+            <div
+              className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 font-mono text-[11px]"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              <span>
+                <span style={{ color: "var(--color-text-secondary)" }}>
+                  {consequenceCount}
+                </span>{" "}
+                consequences
+              </span>
+              <span>·</span>
+              <span>
+                <span style={{ color: "var(--color-text-secondary)" }}>
+                  {domainCount}
+                </span>{" "}
+                domains
+              </span>
+              <span>·</span>
+              <span>
+                <span style={{ color: "var(--color-text-secondary)" }}>
+                  {horizonMin}–{horizonMax}d
+                </span>{" "}
+                horizon
+              </span>
+              <span>·</span>
+              <span
+                style={{
+                  color: speculativeCount > 0
+                    ? "var(--color-tier-speculative)"
+                    : "var(--color-text-muted)",
+                }}
+              >
+                {speculativeCount} speculative
+              </span>
+            </div>
+          </div>
+
+          <div className="shrink-0">
+            <GenerateMemoButton
+              onClick={() => {
+                if (narrative) {
+                  setNarrativeOpen(true);
+                } else {
+                  handleGenerateNarrative();
+                }
+              }}
+            />
+          </div>
+        </div>
       </header>
 
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6">
+      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 pt-4">
         <ConfidenceLegend />
+
+        {/* Domain distribution bar */}
+        <div
+          className="flex h-1.5 w-full overflow-hidden rounded-full gap-px"
+          title="Domain distribution across consequences"
+        >
+          {Object.entries(domainCounts).map(([domain, count]) => (
+            <div
+              key={domain}
+              title={`${domain}: ${count} node${count > 1 ? "s" : ""}`}
+              style={{
+                width: `${(count / totalDomainNodes) * 100}%`,
+                background: `hsl(${domainHue(domain as Domain)}, 60%, 50%)`,
+                opacity: 0.7,
+              }}
+            />
+          ))}
+        </div>
 
         <GraphControls
           graph={graph}
@@ -149,19 +242,6 @@ export default function ScenarioPage() {
           maxHorizonDays={maxHorizonDays}
           onHorizonChange={setMaxHorizonDays}
         />
-
-        <div className="flex items-center justify-between">
-          <div />
-          <GenerateMemoButton
-            onClick={() => {
-              if (narrative) {
-                setNarrativeOpen(true);
-              } else {
-                handleGenerateNarrative();
-              }
-            }}
-          />
-        </div>
 
         <CausalGraph
           graph={graph}

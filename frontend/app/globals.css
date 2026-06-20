@@ -19,6 +19,8 @@
 
   --color-polarity-amplify: #22d3ee;
   --color-polarity-dampen: #fb923c;
+  --color-polarity-amplify-subtle: rgba(34, 211, 238, 0.08);
+  --color-polarity-dampen-subtle: rgba(251, 146, 60, 0.08);
 }
 
 * {
