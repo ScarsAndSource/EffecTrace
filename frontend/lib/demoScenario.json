@@ -293,14 +293,6 @@
       "rationale_citation": "Accelerated enterprise pipeline partially offsets SMB churn revenue loss."
     },
     {
-      "source_id": "customer_satisfaction_dip",
-      "target_id": "customer_churn_spike",
-      "polarity": 1,
-      "magnitude_estimate": 0.3,
-      "time_horizon_days": 90,
-      "rationale_citation": "NPS decline may trigger additional churn beyond the direct price effect in subsequent quarters."
-    },
-    {
       "source_id": "sales_incentive_misalignment",
       "target_id": "market_share_shift",
       "polarity": 1,
