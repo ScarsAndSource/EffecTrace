@@ -79,7 +79,7 @@ export default function NarrativePanel({
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
-      doc.text("Board Memo — Butterfly Effect", marginX, y);
+      doc.text("Board Memo — EffecTrace", marginX, y);
       y += 22;
 
       if (decisionSummary) {

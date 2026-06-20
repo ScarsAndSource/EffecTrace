@@ -149,7 +149,7 @@ export default function ScenarioPage() {
           className="mb-3 inline-flex items-center gap-1.5 font-mono text-xs no-underline"
           style={{ color: "var(--color-text-muted)" }}
         >
-          ← Butterfly Effect
+          ← EffecTrace
         </Link>
 
         <div className="flex items-end justify-between gap-4">
