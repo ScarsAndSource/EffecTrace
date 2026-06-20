@@ -79,7 +79,7 @@ export default function HomePage() {
           className="font-display text-4xl font-medium leading-tight sm:text-5xl"
           style={{ color: "var(--color-text-primary)" }}
         >
-          Butterfly Effect
+          EffecTrace
         </h1>
         <p className="mt-3 font-sans text-base leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
           Type one business decision. Watch a causal web of its likely cascading consequences
