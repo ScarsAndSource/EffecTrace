@@ -132,15 +132,25 @@ export default function NarrativePanel({
         }
       `}</style>
 
-      <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: "var(--color-border)" }}>
-        <div className="font-display text-base font-medium" style={{ color: "var(--color-text-primary)" }}>
-          Board Memo
+      <div className="flex items-start justify-between gap-3 border-b px-5 py-4" style={{ borderColor: "var(--color-border)" }}>
+        <div className="min-w-0">
+          <div className="font-display text-base font-medium" style={{ color: "var(--color-text-primary)" }}>
+            Board Memo
+          </div>
+          {decisionSummary && (
+            <p
+              className="mt-0.5 font-sans text-[11px] leading-snug"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              {decisionSummary.length > 60 ? decisionSummary.slice(0, 58) + "…" : decisionSummary}
+            </p>
+          )}
         </div>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close board memo"
-          className="rounded-md px-1.5 font-mono text-lg leading-none"
+          className="shrink-0 rounded-md px-1.5 font-mono text-lg leading-none"
           style={{ color: "var(--color-text-muted)" }}
         >
           ×
@@ -152,14 +162,25 @@ export default function NarrativePanel({
         style={{ color: "var(--color-text-secondary)" }}
       >
         {loading && (
-          <div className="flex flex-col gap-2">
-            {[0, 1, 2].map((i) => (
+          <div className="flex flex-col gap-4 pt-2">
+            <div className="flex items-center gap-2">
               <div
-                key={i}
-                className="h-3 animate-pulse rounded"
-                style={{ background: "var(--color-border-subtle)", width: `${92 - i * 14}%` }}
+                className="h-2 w-2 animate-pulse rounded-full"
+                style={{ background: "var(--color-decision-root)" }}
               />
-            ))}
+              <span className="font-mono text-[11px]" style={{ color: "var(--color-text-muted)" }}>
+                Synthesizing narrative…
+              </span>
+            </div>
+            <div className="space-y-2.5">
+              {[0.9, 0.75, 0.92, 0.6, 0.82].map((w, i) => (
+                <div
+                  key={i}
+                  className="h-2.5 animate-pulse rounded"
+                  style={{ width: `${w * 100}%`, background: "var(--color-border-subtle)" }}
+                />
+              ))}
+            </div>
           </div>
         )}
 
@@ -208,8 +229,8 @@ export default function NarrativePanel({
             type="button"
             onClick={handleDownloadPdf}
             disabled={exporting}
-            className="rounded-lg border px-3 py-1.5 font-sans text-xs transition-opacity disabled:opacity-40"
-            style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
+            className="rounded-lg px-3 py-1.5 font-sans text-xs font-medium transition-opacity disabled:opacity-40"
+            style={{ background: "var(--color-decision-root)", color: "#0a0b0f" }}
           >
             {exporting ? "Exporting…" : "Download PDF"}
           </button>

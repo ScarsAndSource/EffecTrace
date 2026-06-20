@@ -23,12 +23,22 @@ const MOCK_ROWS: CalibrationRow[] = [
   { label: "Competitor price response", domain: "Competitive", before: { p10: -0.18, p90: 0.55 }, after: { p10: 0.12, p90: 0.4 } },
 ];
 
-function Bar({ p10, p90, color }: { p10: number; p90: number; color: string }) {
+function Bar({
+  p10,
+  p90,
+  color,
+  height = "h-2.5",
+}: {
+  p10: number;
+  p90: number;
+  color: string;
+  height?: string;
+}) {
   const toPct = (v: number) => ((v + 1) / 2) * 100; // map [-1,1] -> [0,100]
   const left = toPct(p10);
   const width = toPct(p90) - left;
   return (
-    <div className="relative h-2.5 w-full rounded-full" style={{ background: "var(--color-border-subtle)" }}>
+    <div className={`relative ${height} w-full rounded-full`} style={{ background: "var(--color-border-subtle)" }}>
       <div className="absolute h-full rounded-full" style={{ left: `${left}%`, width: `${width}%`, background: color }} />
     </div>
   );
@@ -37,8 +47,12 @@ function Bar({ p10, p90, color }: { p10: number; p90: number; color: string }) {
 export default function CalibrationMock() {
   return (
     <div
-      className="rounded-xl border px-5 py-4 font-sans"
-      style={{ background: "var(--color-bg-card)", borderColor: "var(--color-border)" }}
+      className="rounded-xl border border-l-2 px-5 py-4 font-sans"
+      style={{
+        background: "var(--color-bg-card)",
+        borderColor: "var(--color-border)",
+        borderLeftColor: TIER_COLOR.data_grounded,
+      }}
     >
       <div className="flex items-center justify-between">
         <div className="font-display text-sm font-medium" style={{ color: "var(--color-text-primary)" }}>
@@ -65,9 +79,39 @@ export default function CalibrationMock() {
                 {row.domain}
               </span>
             </div>
-            <div className="space-y-1">
-              <Bar p10={row.before.p10} p90={row.before.p90} color="var(--color-text-muted)" />
-              <Bar p10={row.after.p10} p90={row.after.p90} color={TIER_COLOR.data_grounded} />
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-12 text-right font-mono text-[9px]"
+                  style={{ color: "var(--color-text-muted)" }}
+                >
+                  before
+                </span>
+                <div className="flex-1">
+                  <Bar
+                    p10={row.before.p10}
+                    p90={row.before.p90}
+                    color="var(--color-text-muted)"
+                    height="h-3"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-12 text-right font-mono text-[9px]"
+                  style={{ color: TIER_COLOR.data_grounded }}
+                >
+                  after
+                </span>
+                <div className="flex-1">
+                  <Bar
+                    p10={row.after.p10}
+                    p90={row.after.p90}
+                    color={TIER_COLOR.data_grounded}
+                    height="h-3"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         ))}

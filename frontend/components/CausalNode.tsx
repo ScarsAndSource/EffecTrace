@@ -2,7 +2,7 @@
 
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import type { RenderableNode } from "@/lib/types";
-import { COLOR, TIER_COLOR } from "@/lib/visualTokens";
+import { COLOR, TIER_COLOR, domainHue } from "@/lib/visualTokens";
 import { formatSigned } from "@/lib/format";
 
 export interface CausalNodeData extends Record<string, unknown> {
@@ -32,13 +32,15 @@ export default function CausalNode({ data, selected }: NodeProps<CausalFlowNode>
       <div
         className="cursor-pointer rounded-xl border-2 px-3 py-2.5 transition-[filter] hover:brightness-110"
         style={{
-          background: isRoot ? "rgba(139,143,245,0.10)" : "var(--color-bg-card)",
+          background: isRoot
+            ? "rgba(139,143,245,0.10)"
+            : `hsl(${domainHue(node.domain)}, 55%, 11%)`,
           borderColor: ringColor,
           boxShadow: selected
             ? `0 0 0 2px ${ringColor}, 0 0 28px ${ringColor}55`
             : `0 0 14px ${ringColor}22`,
-          minWidth: isRoot ? 170 : 152,
-          maxWidth: 196,
+          minWidth: isRoot ? 170 : 164,
+          maxWidth: 208,
         }}
       >
         <div
@@ -54,9 +56,33 @@ export default function CausalNode({ data, selected }: NodeProps<CausalFlowNode>
           {node.label}
         </div>
         {!isRoot && (
-          <div className="mt-1.5 font-mono text-[11px]" style={{ color: "var(--color-text-secondary)" }}>
-            {formatSigned(node.outcome.p10)} <span style={{ color: "var(--color-text-muted)" }}>to</span>{" "}
-            {formatSigned(node.outcome.p90)}
+          <div className="mt-2" title={`${formatSigned(node.outcome.p10)} to ${formatSigned(node.outcome.p90)}`}>
+            <div
+              className="relative h-1.5 w-full overflow-hidden rounded-full"
+              style={{ background: "var(--color-border-subtle)" }}
+            >
+              <div
+                className="absolute h-full rounded-full"
+                style={{
+                  left: `${((node.outcome.p10 + 1) / 2) * 100}%`,
+                  width: `${((node.outcome.p90 - node.outcome.p10) / 2) * 100}%`,
+                  background:
+                    node.direction === "positive"
+                      ? "var(--color-polarity-amplify)"
+                      : node.direction === "negative"
+                      ? "var(--color-polarity-dampen)"
+                      : "var(--color-text-muted)",
+                  opacity: 0.85,
+                }}
+              />
+            </div>
+            <div
+              className="mt-0.5 flex justify-between font-mono text-[9px]"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              <span>{formatSigned(node.outcome.p10)}</span>
+              <span>{formatSigned(node.outcome.p90)}</span>
+            </div>
           </div>
         )}
       </div>

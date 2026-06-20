@@ -1,13 +1,41 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DecisionInput from "@/components/DecisionInput";
 import { DEMO_MODE, getDemoGenerateResult } from "@/lib/demoMode";
+
+const EXAMPLE_DECISIONS = [
+  "Raise SaaS prices 15% across all tiers next quarter",
+  "Cut support headcount by 30% to hit Q3 EBITDA targets",
+  "Launch a freemium tier to compete with new market entrant",
+  "Mandate return-to-office 4 days a week starting January",
+];
+
+const LOADING_STAGES = [
+  "Mapping direct effects…",
+  "Tracing second-order consequences…",
+  "Calibrating confidence tiers…",
+  "Composing causal graph…",
+];
 
 export default function HomePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const [stageIndex, setStageIndex] = useState(0);
+
+  // Cycle through loading stage copy while a request is in flight.
+  useEffect(() => {
+    if (!loading) {
+      setStageIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setStageIndex((i) => (i + 1) % LOADING_STAGES.length);
+    }, 1200);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   async function handleSubmit(decisionText: string) {
     setLoading(true);
@@ -60,7 +88,26 @@ export default function HomePage() {
         </p>
       </div>
 
-      <DecisionInput onSubmit={handleSubmit} loading={loading} />
+      <DecisionInput
+        onSubmit={handleSubmit}
+        loading={loading}
+        value={inputValue}
+        onChange={setInputValue}
+      />
+
+      <div className="flex max-w-2xl flex-wrap justify-center gap-2">
+        {EXAMPLE_DECISIONS.map((ex) => (
+          <button
+            key={ex}
+            type="button"
+            onClick={() => setInputValue(ex)}
+            className="rounded-full border px-3 py-1 font-sans text-xs transition-colors hover:border-[var(--color-decision-root)]"
+            style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
+          >
+            {ex.length > 45 ? ex.slice(0, 42) + "…" : ex}
+          </button>
+        ))}
+      </div>
 
       {loading && (
         <div className="flex flex-col items-center gap-3">
@@ -70,7 +117,7 @@ export default function HomePage() {
             <div className="h-2.5 w-2.5 animate-pulse rounded-full delay-150" style={{ background: "var(--color-decision-root)" }} />
           </div>
           <span className="font-sans text-xs" style={{ color: "var(--color-text-muted)" }}>
-            Mapping direct effects…
+            {LOADING_STAGES[stageIndex]}
           </span>
         </div>
       )}
