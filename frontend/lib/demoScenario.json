@@ -1,0 +1,312 @@
+{
+  "decision_summary": "We're raising SaaS prices 15% next quarter across all tiers.",
+  "primary_domain": "Revenue",
+  "nodes": [
+    {
+      "id": "decision_root",
+      "label": "15% Price Increase",
+      "domain": "Revenue",
+      "layer": 0,
+      "confidence_tier": "data_grounded",
+      "description": "The decision to raise subscription prices by 15% across all product tiers, effective next quarter.",
+      "direction": "ambiguous"
+    },
+    {
+      "id": "revenue_per_customer_increase",
+      "label": "Revenue Per Customer Up",
+      "domain": "Revenue",
+      "layer": 0,
+      "confidence_tier": "data_grounded",
+      "description": "Immediate increase in average revenue per existing customer who renews at the new price. Basic arithmetic: 15% higher price yields ~15% higher ARPU for retained customers.",
+      "direction": "positive"
+    },
+    {
+      "id": "customer_churn_spike",
+      "label": "Customer Churn Spike",
+      "domain": "Customer",
+      "layer": 0,
+      "confidence_tier": "historically_precedented",
+      "description": "Price-sensitive segment cancels or downgrades. ProfitWell 2021 benchmark: 1% SaaS price increase yields ~0.5% churn acceleration above baseline. At 15%, expect 5-8% incremental churn concentrated in SMB cohort.",
+      "direction": "negative"
+    },
+    {
+      "id": "sales_cycle_lengthening",
+      "label": "Sales Cycle Lengthens",
+      "domain": "Revenue",
+      "layer": 0,
+      "confidence_tier": "historically_precedented",
+      "description": "New prospects require additional approval layers at the higher price point. Winright 2023 enterprise SaaS study found 12% price increase correlates with 18% longer average sales cycle due to additional procurement review stages.",
+      "direction": "negative"
+    },
+    {
+      "id": "brand_positioning_shift",
+      "label": "Brand Moves Upmarket",
+      "domain": "Brand",
+      "layer": 0,
+      "confidence_tier": "speculative",
+      "description": "Higher price signals higher quality to the market. Potentially improves brand perception among enterprise buyers who equated lower price with lower capability. Limited empirical data on this effect at the 15% level.",
+      "direction": "positive"
+    },
+    {
+      "id": "support_ticket_volume_change",
+      "label": "Support Volume Shifts",
+      "domain": "Operations",
+      "layer": 1,
+      "confidence_tier": "historically_precedented",
+      "description": "Post-price-increase support patterns shift: fewer tickets from retained customers (higher willingness to pay correlates with lower support usage), offset by churn-related cancellation requests and price objection conversations from the departing segment.",
+      "direction": "ambiguous"
+    },
+    {
+      "id": "net_revenue_impact",
+      "label": "Net Revenue Impact",
+      "domain": "Revenue",
+      "layer": 1,
+      "confidence_tier": "data_grounded",
+      "description": "Combined effect of ARPU increase minus churn revenue loss. Classic SaaS pricing math: 15% price increase on 90% retained base yields ~10.5% net revenue uplift, assuming zero downgrades. Real-world studies (Price Intelligently 2022) suggest 7-12% net uplift range after churn and downgrade effects.",
+      "direction": "positive"
+    },
+    {
+      "id": "competitor_response",
+      "label": "Competitor Promotions",
+      "domain": "Competitive",
+      "layer": 1,
+      "confidence_tier": "historically_precedented",
+      "description": "Competitors detect the price increase via market signals and launch targeted promotions at your churning segment. Documented pattern: HubSpot's 2019 price increase triggered a coordinated campaign by Salesforce and Mailchimp targeting the mid-market segment most affected.",
+      "direction": "negative"
+    },
+    {
+      "id": "sales_incentive_misalignment",
+      "label": "Sales Incentive Distortion",
+      "domain": "HR",
+      "layer": 1,
+      "confidence_tier": "speculative",
+      "description": "Higher price point changes the incentive structure: sales reps may push higher-tier products to compensate for longer cycles, potentially misaligning with customer needs. Anecdotal evidence from SaaS compensation studies suggests this resolves within 2 quarters as quotas adjust.",
+      "direction": "negative"
+    },
+    {
+      "id": "customer_satisfaction_dip",
+      "label": "NPS / Satisfaction Dip",
+      "domain": "Customer",
+      "layer": 1,
+      "confidence_tier": "historically_precedented",
+      "description": "Short-term NPS decline as customers react to the price change. G2 2023 pricing sensitivity survey found SaaS companies experience a 5-12 point NPS drop in the quarter following a double-digit price increase, recovering within 2-3 quarters as the new price normalizes.",
+      "direction": "negative"
+    },
+    {
+      "id": "enterprise_deal_acceleration",
+      "label": "Enterprise Deal Velocity",
+      "domain": "Revenue",
+      "layer": 1,
+      "confidence_tier": "speculative",
+      "description": "Enterprise buyers who were on the fence may accelerate decisions, perceiving the price increase as a signal of growth and market validation. Limited data supports 10-15% acceleration in enterprise pipeline conversion following well-communicated price increases.",
+      "direction": "positive"
+    },
+    {
+      "id": "product_development_pressure",
+      "label": "Product Value Pressure",
+      "domain": "Technology",
+      "layer": 1,
+      "confidence_tier": "speculative",
+      "description": "Higher price raises customer expectations for product velocity and feature releases. Engineering team faces pressure to deliver visible improvements to justify the increase, potentially pulling resources from long-term architecture work.",
+      "direction": "ambiguous"
+    },
+    {
+      "id": "market_share_shift",
+      "label": "SMB Market Share Loss",
+      "domain": "Market",
+      "layer": 2,
+      "confidence_tier": "historically_precedented",
+      "description": "Over 6-12 months, churning SMB customers consolidate with lower-priced alternatives, reducing market share in the small-business segment. Atlassian's 2021 pricing restructure resulted in 3-4% SMB market share erosion over 2 quarters before stabilizing.",
+      "direction": "negative"
+    },
+    {
+      "id": "profitability_improvement",
+      "label": "Margin Expansion",
+      "domain": "Revenue",
+      "layer": 2,
+      "confidence_tier": "data_grounded",
+      "description": "Higher revenue per customer with largely fixed cost base delivers operating leverage. At SaaS gross margins of 70-80%, a 7-12% net revenue increase translates to 10-18% gross profit improvement, assuming support costs scale sub-linearly with churned customers.",
+      "direction": "positive"
+    },
+    {
+      "id": "talent_acquisition_impact",
+      "label": "Talent Brand Effect",
+      "domain": "HR",
+      "layer": 2,
+      "confidence_tier": "speculative",
+      "description": "Higher revenue per customer enables higher engineering salaries, improving hiring competitiveness in a tight talent market. Revenue growth from pricing improvements is viewed positively by candidates as a sign of product-market fit strength.",
+      "direction": "positive"
+    },
+    {
+      "id": "long_term_valuation_effect",
+      "label": "Valuation Multiple Shift",
+      "domain": "Market",
+      "layer": 2,
+      "confidence_tier": "speculative",
+      "description": "Public-market comparable analysis suggests that SaaS companies demonstrating pricing power trade at 1.5-2.5x higher revenue multiples. A successful 15% price increase signals pricing power to the market, potentially expanding the valuation multiple over time.",
+      "direction": "positive"
+    }
+  ],
+  "edges": [
+    {
+      "source_id": "decision_root",
+      "target_id": "revenue_per_customer_increase",
+      "polarity": 1,
+      "magnitude_estimate": 0.95,
+      "time_horizon_days": 30,
+      "rationale_citation": "Basic arithmetic: 15% price increase yields ~15% higher ARPU for retained customers. ProfitWell Price Intelligently benchmark data 2022."
+    },
+    {
+      "source_id": "decision_root",
+      "target_id": "customer_churn_spike",
+      "polarity": 1,
+      "magnitude_estimate": 0.85,
+      "time_horizon_days": 60,
+      "rationale_citation": "ProfitWell 2021 SaaS pricing sensitivity study: 1% price increase yields ~0.5% churn acceleration above baseline."
+    },
+    {
+      "source_id": "decision_root",
+      "target_id": "sales_cycle_lengthening",
+      "polarity": 1,
+      "magnitude_estimate": 0.7,
+      "time_horizon_days": 90,
+      "rationale_citation": "Winright 2023 enterprise SaaS procurement study: 12% price increase correlates with 18% longer average sales cycle."
+    },
+    {
+      "source_id": "decision_root",
+      "target_id": "brand_positioning_shift",
+      "polarity": 1,
+      "magnitude_estimate": 0.4,
+      "time_horizon_days": 180,
+      "rationale_citation": "Veblen effect in B2B SaaS: higher price signals quality. Limited quantification at 15% level."
+    },
+    {
+      "source_id": "customer_churn_spike",
+      "target_id": "support_ticket_volume_change",
+      "polarity": 1,
+      "magnitude_estimate": 0.6,
+      "time_horizon_days": 60,
+      "rationale_citation": "Churn generates cancellation requests and price objection conversations. Intercom 2022 support volume analysis."
+    },
+    {
+      "source_id": "revenue_per_customer_increase",
+      "target_id": "net_revenue_impact",
+      "polarity": 1,
+      "magnitude_estimate": 0.9,
+      "time_horizon_days": 90,
+      "rationale_citation": "ARPU increase directly contributes to net revenue. Price Intelligently 2022: 15% price increase yields 7-12% net uplift after churn."
+    },
+    {
+      "source_id": "customer_churn_spike",
+      "target_id": "net_revenue_impact",
+      "polarity": -1,
+      "magnitude_estimate": 0.75,
+      "time_horizon_days": 90,
+      "rationale_citation": "Churn revenue loss partially offsets ARPU gain. 5-8% churn at 15% higher price yields net calculation."
+    },
+    {
+      "source_id": "customer_churn_spike",
+      "target_id": "competitor_response",
+      "polarity": 1,
+      "magnitude_estimate": 0.55,
+      "time_horizon_days": 120,
+      "rationale_citation": "Competitors target churning segment with promotions. HubSpot 2019 price increase triggered Salesforce + Mailchimp counter-campaign."
+    },
+    {
+      "source_id": "sales_cycle_lengthening",
+      "target_id": "sales_incentive_misalignment",
+      "polarity": 1,
+      "magnitude_estimate": 0.45,
+      "time_horizon_days": 120,
+      "rationale_citation": "Longer cycles change rep behavior. SaaS compensation studies document 2-quarter adjustment period for quota realignment."
+    },
+    {
+      "source_id": "customer_churn_spike",
+      "target_id": "customer_satisfaction_dip",
+      "polarity": 1,
+      "magnitude_estimate": 0.65,
+      "time_horizon_days": 60,
+      "rationale_citation": "Price increase triggers NPS drop. G2 2023 pricing survey: 5-12 point NPS decline following double-digit increase."
+    },
+    {
+      "source_id": "brand_positioning_shift",
+      "target_id": "enterprise_deal_acceleration",
+      "polarity": 1,
+      "magnitude_estimate": 0.35,
+      "time_horizon_days": 180,
+      "rationale_citation": "Higher price signals market validation to enterprise prospects. Limited quantification but documented pattern in enterprise SaaS."
+    },
+    {
+      "source_id": "revenue_per_customer_increase",
+      "target_id": "product_development_pressure",
+      "polarity": 1,
+      "magnitude_estimate": 0.5,
+      "time_horizon_days": 120,
+      "rationale_citation": "Higher customer expectations justify price increase. Engineering resource allocation pressure documented in multiple SaaS post-mortems."
+    },
+    {
+      "source_id": "competitor_response",
+      "target_id": "market_share_shift",
+      "polarity": 1,
+      "magnitude_estimate": 0.6,
+      "time_horizon_days": 180,
+      "rationale_citation": "Competitor promotions capture churning SMB customers. Atlassian 2021: 3-4% SMB market share erosion post-pricing restructure."
+    },
+    {
+      "source_id": "net_revenue_impact",
+      "target_id": "profitability_improvement",
+      "polarity": 1,
+      "magnitude_estimate": 0.85,
+      "time_horizon_days": 180,
+      "rationale_citation": "SaaS gross margins 70-80%; 7-12% net revenue increase translates to 10-18% gross profit improvement with fixed cost base."
+    },
+    {
+      "source_id": "profitability_improvement",
+      "target_id": "talent_acquisition_impact",
+      "polarity": 1,
+      "magnitude_estimate": 0.4,
+      "time_horizon_days": 270,
+      "rationale_citation": "Higher margins enable competitive compensation. Revenue-per-employee ratio is a known talent attraction signal in tech hiring."
+    },
+    {
+      "source_id": "profitability_improvement",
+      "target_id": "long_term_valuation_effect",
+      "polarity": 1,
+      "magnitude_estimate": 0.55,
+      "time_horizon_days": 365,
+      "rationale_citation": "Pricing power signals quality to public markets. SaaS companies demonstrating pricing power trade at 1.5-2.5x higher revenue multiples."
+    },
+    {
+      "source_id": "market_share_shift",
+      "target_id": "long_term_valuation_effect",
+      "polarity": -1,
+      "magnitude_estimate": 0.3,
+      "time_horizon_days": 365,
+      "rationale_citation": "Market share loss in growing segments partially offsets valuation expansion from pricing power."
+    },
+    {
+      "source_id": "enterprise_deal_acceleration",
+      "target_id": "net_revenue_impact",
+      "polarity": 1,
+      "magnitude_estimate": 0.25,
+      "time_horizon_days": 120,
+      "rationale_citation": "Accelerated enterprise pipeline partially offsets SMB churn revenue loss."
+    },
+    {
+      "source_id": "customer_satisfaction_dip",
+      "target_id": "customer_churn_spike",
+      "polarity": 1,
+      "magnitude_estimate": 0.3,
+      "time_horizon_days": 90,
+      "rationale_citation": "NPS decline may trigger additional churn beyond the direct price effect in subsequent quarters."
+    },
+    {
+      "source_id": "sales_incentive_misalignment",
+      "target_id": "market_share_shift",
+      "polarity": 1,
+      "magnitude_estimate": 0.2,
+      "time_horizon_days": 180,
+      "rationale_citation": "Misaligned incentives may accelerate SMB neglect, compounding market share loss in that segment."
+    }
+  ]
+}

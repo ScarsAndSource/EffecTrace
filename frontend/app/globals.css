@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #0a0b0f;
+  --color-bg-elevated: #12141a;
+  --color-bg-card: #16181f;
+  --color-border: #262932;
+  --color-border-subtle: #1d1f27;
+  --color-text-primary: #e8e9ed;
+  --color-text-secondary: #9498a3;
+  --color-text-muted: #5d616e;
+  --color-decision-root: #8b8ff5;
+
+  --color-tier-data-grounded: #34d399;
+  --color-tier-historically-precedented: #fbbf24;
+  --color-tier-speculative: #fb7185;
+
+  --color-polarity-amplify: #22d3ee;
+  --color-polarity-dampen: #fb923c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-decision-root);
+  color: #0a0b0f;
+}
+
+/* Keyboard focus must stay visible — never suppressed for aesthetics. */
+:focus-visible {
+  outline: 2px solid var(--color-decision-root);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

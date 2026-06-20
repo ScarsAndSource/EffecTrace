@@ -1,0 +1,16 @@
+# DECISION: keeping networkx — nx.find_cycle + nx.is_directed_acyclic_graph
+# are the only robust cycle-detection primitives for the ensure_dag() guard.
+# The graph is small (≤17 nodes) so import weight is the only cost.
+# Drop in prod if cold-start latency becomes a problem; replace with Kahn's + DFS cycle check.
+
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+groq==0.11.0
+networkx==3.3
+numpy==1.26.4
+pydantic==2.9.2
+upstash-redis==1.1.0
+supabase==2.7.4
+langfuse==2.53.7
+python-dotenv==1.0.1
+httpx==0.27.2
