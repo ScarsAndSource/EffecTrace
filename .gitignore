@@ -1,0 +1,23 @@
+# env / secrets
+.env
+.env.local
+.env*.local
+backend/.env
+frontend/.env.local
+
+# python
+__pycache__/
+*.pyc
+venv/
+.venv/
+backend/test_outputs/
+
+# node
+node_modules/
+.next/
+out/
+.vercel/
+
+# os
+.DS_Store
+Thumbs.db
