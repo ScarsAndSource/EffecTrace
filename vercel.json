@@ -1,11 +1,13 @@
 {
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 60,
-      "includeFiles": "api/**,models/**,requirements.txt"
+    "experimentalServices": {
+        "frontend": {
+            "root": "frontend",
+            "routePrefix": "/",
+            "framework": "nextjs"
+        },
+        "backend": {
+            "root": "backend",
+            "routePrefix": "/_/backend"
+        }
     }
-  },
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index.py" }
-  ]
 }
