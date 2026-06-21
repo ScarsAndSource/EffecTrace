@@ -24,6 +24,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [stageIndex, setStageIndex] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   // Cycle through loading stage copy while a request is in flight.
   useEffect(() => {
@@ -39,31 +40,28 @@ export default function HomePage() {
 
   async function handleSubmit(decisionText: string) {
     setLoading(true);
+    setError(null);
 
     if (DEMO_MODE) {
+      const sessionId = `demo-${Date.now()}`;
       const result = getDemoGenerateResult();
-      // Store in sessionStorage for the scenario page to pick up
-      sessionStorage.setItem("demo_graph", JSON.stringify(result.graph));
-      sessionStorage.setItem("demo_outcomes", JSON.stringify(result.outcomes));
-      sessionStorage.setItem("demo_session_id", result.session_id);
-      router.push(`/scenario/${result.session_id}`);
+      sessionStorage.setItem(`session_${sessionId}_graph`, JSON.stringify(result.graph));
+      sessionStorage.setItem(`session_${sessionId}_outcomes`, JSON.stringify(result.outcomes));
+      sessionStorage.setItem(`session_${sessionId}_decision`, decisionText);
+      router.push(`/scenario/${sessionId}`);
       return;
     }
 
     try {
       const { generateScenario } = await import("@/lib/apiClient");
       const response = await generateScenario(decisionText);
-      sessionStorage.setItem("live_graph", JSON.stringify(response.graph));
-      sessionStorage.setItem("live_outcomes", JSON.stringify(response.simulation.outcomes));
-      sessionStorage.setItem("live_session_id", response.session_id);
+      sessionStorage.setItem(`session_${response.session_id}_graph`, JSON.stringify(response.graph));
+      sessionStorage.setItem(`session_${response.session_id}_outcomes`, JSON.stringify(response.simulation.outcomes));
+      sessionStorage.setItem(`session_${response.session_id}_decision`, decisionText);
       router.push(`/scenario/${response.session_id}`);
     } catch (err) {
-      console.error("Generation failed, falling back to demo mode:", err);
-      const result = getDemoGenerateResult();
-      sessionStorage.setItem("demo_graph", JSON.stringify(result.graph));
-      sessionStorage.setItem("demo_outcomes", JSON.stringify(result.outcomes));
-      sessionStorage.setItem("demo_session_id", result.session_id);
-      router.push(`/scenario/${result.session_id}`);
+      console.error("Generation failed:", err);
+      setError(err instanceof Error ? err.message : "Failed to generate scenario. Check that the backend is reachable.");
     } finally {
       setLoading(false);
     }
@@ -94,6 +92,15 @@ export default function HomePage() {
         value={inputValue}
         onChange={setInputValue}
       />
+
+      {error && (
+        <div
+          className="w-full max-w-2xl rounded-xl border px-4 py-3 font-sans text-xs"
+          style={{ borderColor: "var(--color-tier-speculative)", color: "var(--color-tier-speculative)", background: "rgba(251,113,133,0.06)" }}
+        >
+          {error}
+        </div>
+      )}
 
       <div className="flex max-w-2xl flex-wrap justify-center gap-2">
         {EXAMPLE_DECISIONS.map((ex) => (

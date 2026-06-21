@@ -17,7 +17,11 @@ import demoScenarioRaw from "./demoScenario.json";
 import { runClientSimulation } from "./graphPropagation";
 import type { CausalGraphOutput, OutcomeMap } from "./types";
 
-export const DEMO_SESSION_ID = "demo-saas-pricing-15pct";
+export const DEMO_SESSION_PREFIX = "demo-";
+
+export function isDemoSession(id: string): boolean {
+  return id.startsWith(DEMO_SESSION_PREFIX);
+}
 
 /** True when there's no backend configured, or the flag is forced on explicitly.
  * Mirrors apiClient.ts's own BACKEND_URL check so the two files can never disagree
@@ -57,7 +61,7 @@ export interface DemoGenerateResult {
 export function getDemoGenerateResult(): DemoGenerateResult {
   const graph = getDemoScenario();
   const outcomes = runClientSimulation(graph, {});
-  return { session_id: DEMO_SESSION_ID, graph, outcomes };
+  return { session_id: `${DEMO_SESSION_PREFIX}${Date.now()}`, graph, outcomes };
 }
 
 /** Returns the demo narrative instead of calling /scenario/narrate. */

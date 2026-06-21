@@ -13,7 +13,7 @@ import { runClientSimulation } from "@/lib/graphPropagation";
 import { domainHue } from "@/lib/visualTokens";
 import {
   DEMO_MODE,
-  DEMO_SESSION_ID,
+  isDemoSession,
   getDemoGenerateResult,
   getDemoNarrative,
 } from "@/lib/demoMode";
@@ -51,22 +51,25 @@ export default function ScenarioPage() {
   const [narrative, setNarrative] = useState<string | null>(null);
   const [narrativeLoading, setNarrativeLoading] = useState(false);
   const [narrativeError, setNarrativeError] = useState<string | null>(null);
+  const [recomputed, setRecomputed] = useState(false);
 
-  // Load graph data
-  const { graph, outcomes } = useMemo(() => {
-    if (DEMO_MODE || sessionId === DEMO_SESSION_ID) {
-      const result = getDemoGenerateResult();
-      return { graph: result.graph, outcomes: result.outcomes };
-    }
+  // Load graph data — always reads from session-keyed storage.
+  // Falls back to demo data only if nothing is found (e.g. manual URL nav or page refresh).
+  const { graph, outcomes, decisionText } = useMemo(() => {
+    const storedGraph = loadFromStorage<CausalGraphOutput>(`session_${sessionId}_graph`);
+    const storedOutcomes = loadFromStorage<OutcomeMap>(`session_${sessionId}_outcomes`);
+    const storedDecision =
+      typeof window !== "undefined"
+        ? sessionStorage.getItem(`session_${sessionId}_decision`)
+        : null;
 
-    const storedGraph = loadFromStorage<CausalGraphOutput>("live_graph");
-    const storedOutcomes = loadFromStorage<OutcomeMap>("live_outcomes");
     if (storedGraph && storedOutcomes) {
-      return { graph: storedGraph, outcomes: storedOutcomes };
+      return { graph: storedGraph, outcomes: storedOutcomes, decisionText: storedDecision };
     }
 
+    // Hard fallback — user refreshed or navigated directly to a URL
     const demoResult = getDemoGenerateResult();
-    return { graph: demoResult.graph, outcomes: demoResult.outcomes };
+    return { graph: demoResult.graph, outcomes: demoResult.outcomes, decisionText: null };
   }, [sessionId]);
 
   // Re-compute outcomes when slider overrides change
@@ -74,6 +77,14 @@ export default function ScenarioPage() {
     if (Object.keys(overrides).length === 0) return outcomes;
     return runClientSimulation(graph, overrides);
   }, [graph, outcomes, overrides]);
+
+  // Flash "recalculated" badge when overrides drive a re-simulation
+  useEffect(() => {
+    if (Object.keys(overrides).length === 0) return;
+    setRecomputed(true);
+    const t = setTimeout(() => setRecomputed(false), 900);
+    return () => clearTimeout(t);
+  }, [computedOutcomes, overrides]);
 
   // Reset overrides when graph changes
   useEffect(() => {
@@ -87,13 +98,8 @@ export default function ScenarioPage() {
     setOverrides(next);
   }
 
-  /**
-   * FIX (post-review): this previously had no branch for live mode at all —
-   * clicking "Generate Board Memo" against a real backend session silently
-   * did nothing. Now calls POST /scenario/narrate via apiClient.ts.
-   */
   async function handleGenerateNarrative() {
-    if (DEMO_MODE || sessionId === DEMO_SESSION_ID) {
+    if (DEMO_MODE || isDemoSession(sessionId)) {
       setNarrativeLoading(true);
       setNarrativeError(null);
       setTimeout(() => {
@@ -154,12 +160,25 @@ export default function ScenarioPage() {
 
         <div className="flex items-end justify-between gap-4">
           <div className="min-w-0">
-            <h1
-              className="mt-1 font-display text-xl font-medium leading-snug"
-              style={{ color: "var(--color-text-primary)" }}
-            >
-              {graph.decision_summary}
-            </h1>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <h1
+                className="font-display text-xl font-medium leading-snug"
+                style={{ color: "var(--color-text-primary)" }}
+              >
+                {decisionText ?? graph.decision_summary}
+              </h1>
+              {isDemoSession(sessionId) && (
+                <span
+                  className="shrink-0 rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider"
+                  style={{
+                    borderColor: "var(--color-tier-speculative)",
+                    color: "var(--color-tier-speculative)",
+                  }}
+                >
+                  illustrative graph
+                </span>
+              )}
+            </div>
 
             {/* Stat strip — all derived from graph, no new API calls */}
             <div
@@ -217,22 +236,24 @@ export default function ScenarioPage() {
         <ConfidenceLegend />
 
         {/* Domain distribution bar */}
-        <div
-          className="flex h-1.5 w-full overflow-hidden rounded-full gap-px"
-          title="Domain distribution across consequences"
-        >
-          {Object.entries(domainCounts).map(([domain, count]) => (
-            <div
-              key={domain}
-              title={`${domain}: ${count} node${count > 1 ? "s" : ""}`}
-              style={{
-                width: `${(count / totalDomainNodes) * 100}%`,
-                background: `hsl(${domainHue(domain as Domain)}, 60%, 50%)`,
-                opacity: 0.7,
-              }}
-            />
-          ))}
-        </div>
+        {totalDomainNodes > 0 && (
+          <div
+            className="flex h-1.5 w-full overflow-hidden rounded-full gap-px"
+            title="Domain distribution across consequences"
+          >
+            {Object.entries(domainCounts).map(([domain, count]) => (
+              <div
+                key={domain}
+                title={`${domain}: ${count} node${count > 1 ? "s" : ""}`}
+                style={{
+                  width: `${(count / totalDomainNodes) * 100}%`,
+                  background: `hsl(${domainHue(domain as Domain)}, 60%, 50%)`,
+                  opacity: 0.7,
+                }}
+              />
+            ))}
+          </div>
+        )}
 
         <GraphControls
           graph={graph}
@@ -258,6 +279,7 @@ export default function ScenarioPage() {
         graph={graph}
         overrides={overrides}
         onChange={handleSliderChange}
+        recomputed={recomputed}
       />
 
       <NarrativePanel
@@ -265,7 +287,7 @@ export default function ScenarioPage() {
         loading={narrativeLoading}
         error={narrativeError}
         isOpen={narrativeOpen}
-        decisionSummary={graph.decision_summary}
+        decisionSummary={decisionText ?? graph.decision_summary}
         onGenerate={handleGenerateNarrative}
         onClose={() => setNarrativeOpen(false)}
       />
