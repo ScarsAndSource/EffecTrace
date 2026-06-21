@@ -136,7 +136,7 @@ CAUSAL_GRAPH_TOOL = {
                 },
                 "edges": {
                     "type": "array",
-                    "minItems": 12,
+                    "minItems": 10,  # lowered from 12 — model naturally produces 10 for minimal valid graphs
                     "maxItems": 22,
                     "items": {
                         "type": "object",
@@ -195,32 +195,35 @@ You are a causal systems analyst. You map the cascading consequences of \
 business decisions with rigorous intellectual honesty.
 
 STRUCTURAL RULES:
-• Node id "decision_root" (layer 0) is ALWAYS the first node — it IS the decision.
-• Generate 3–5 direct-effect nodes at layer 0 (caused directly by the decision).
-• Generate 4–8 second-order nodes at layer 1 (caused by layer-0 effects).
-• Generate 2–4 third-order nodes at layer 2 (caused by layer-1 effects).
-• Every layer-1 and layer-2 node must have at least one incoming edge from the layer above it.
-• Do NOT create edges that skip layers (decision_root → layer-2 directly is forbidden).
+- Node id "decision_root" (layer 0) is ALWAYS the first node — it IS the decision.
+- Generate 3–5 direct-effect nodes at layer 0 (caused directly by the decision).
+- Generate 4–8 second-order nodes at layer 1 (caused by layer-0 effects).
+- Generate 2–4 third-order nodes at layer 2 (caused by layer-1 effects).
+- Every layer-1 and layer-2 node must have at least one incoming edge from the layer above it.
+- Do NOT create edges that skip layers (decision_root → layer-2 directly is forbidden).
+- Generate AT LEAST 10 edges total. Add cross-connections between same-layer nodes \
+where causally justified (e.g. churn → support_ticket_volume, revenue_gain → cost_cutting_pressure). \
+These lateral edges are required to reach the minimum count and improve graph richness.
 
 CONFIDENCE TIER RULES — assign based on evidence, never plausibility alone:
-• data_grounded: backed by peer-reviewed studies, government statistics, SEC filings, \
+- data_grounded: backed by peer-reviewed studies, government statistics, SEC filings, \
 or rigorous industry datasets. Price elasticity studies, labor economics research, \
 consumer psychology experiments qualify.
-• historically_precedented: observed in multiple documented real-world corporate cases \
+- historically_precedented: observed in multiple documented real-world corporate cases \
 but not rigorously quantified. Company announcements, analyst reports, industry case studies qualify.
-• speculative: logically sound inference with limited empirical backing. \
+- speculative: logically sound inference with limited empirical backing. \
 Reasonable extrapolation from adjacent domains.
 
 EDGE POLARITY:
-• polarity 1: more of the source causes MORE of the target (amplifying).
-• polarity -1: more of the source causes LESS of the target (dampening).
+- polarity 1: more of the source causes MORE of the target (amplifying).
+- polarity -1: more of the source causes LESS of the target (dampening).
 Example: customer_churn → support_ticket_volume has polarity 1 (more churn triggers more tickets).
 Example: revenue_increase → cost_cutting_pressure has polarity -1 (more revenue reduces pressure to cut).
 
 DIRECTION field: business valence of the effect, not the causal direction.
-• positive: good for the company's long-term health.
-• negative: bad for the company's long-term health.
-• ambiguous: genuinely unclear or highly context-dependent.
+- positive: good for the company's long-term health.
+- negative: bad for the company's long-term health.
+- ambiguous: genuinely unclear or highly context-dependent.
 
 CITATION RULE: rationale_citation must name a specific real phenomenon, study, or \
 historical case. "Numerous studies show..." is REJECTED. \
@@ -271,6 +274,7 @@ def generate_causal_graph(
 
     for attempt in range(2):
         span = None
+        raw_args: Optional[str] = None  # declared here so except blocks can always reference it
         try:
             if trace:
                 span = trace.span(
@@ -337,7 +341,7 @@ def generate_causal_graph(
                             "type": "function",
                             "function": {
                                 "name": "generate_causal_graph",
-                                "arguments": raw_args if 'raw_args' in dir() else "{}"
+                                "arguments": raw_args or "{}"
                             }
                         }
                     ]
@@ -355,9 +359,36 @@ def generate_causal_graph(
             last_error = str(e)
             if span:
                 span.end(output={"error": last_error})
+
             print(f"[effectrace] Generation attempt {attempt + 1} unexpected error: {e}")
+
             if attempt == 0:
-                continue  # Try once more on transient errors
+                # Inject the error so the model knows what to fix on retry.
+                # This covers Groq HTTP 400 schema rejections (e.g. minItems violations)
+                # which never reach the ValidationError branch above because Groq
+                # rejects them server-side before returning a response to Python.
+                messages.append({
+                    "role": "assistant",
+                    "content": None,
+                    "tool_calls": [
+                        {
+                            "id": "retry_correction",
+                            "type": "function",
+                            "function": {
+                                "name": "generate_causal_graph",
+                                "arguments": raw_args or "{}"
+                            }
+                        }
+                    ]
+                })
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": "retry_correction",
+                    "content": (
+                        f"Your previous call was rejected with the following error. "
+                        f"Fix it and call generate_causal_graph again:\n\n{last_error}"
+                    )
+                })
 
     raise GraphGenerationError(
         f"Graph generation failed after 2 attempts. Last error: {last_error}"
