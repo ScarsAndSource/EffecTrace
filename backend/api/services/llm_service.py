@@ -22,10 +22,47 @@ import os
 import json
 from typing import Optional
 
-from groq import Groq
+from groq import Groq, NotFoundError, AuthenticationError, PermissionDeniedError
 from pydantic import ValidationError
 
 from models.causal_graph import CausalGraphOutput
+
+
+# ──────────────────────────────────────────────
+#  Model configuration — single source of truth
+# ──────────────────────────────────────────────
+#
+# Groq shut down llama-3.3-70b-versatile on 2026-08-16 (free/developer tiers).
+# Every request to it now returns 404 model_not_found. Groq's recommended
+# replacements are openai/gpt-oss-120b and qwen/qwen3.6-27b.
+#
+# The model ID lives here and is overridable via the GROQ_MODEL env var, so the
+# next deprecation is an env-var change in Vercel + redeploy — not a code edit.
+
+DEFAULT_MODEL = "openai/gpt-oss-120b"
+
+
+def _resolve_model(explicit: Optional[str] = None) -> str:
+    """Explicit arg > GROQ_MODEL env var > DEFAULT_MODEL. Blank values are ignored."""
+    return (explicit or os.environ.get("GROQ_MODEL") or DEFAULT_MODEL).strip()
+
+
+def _extra_body_for(model: str) -> dict:
+    """
+    Model-specific request fields, passed via extra_body.
+
+    gpt-oss models are reasoning models: reasoning tokens are generated BEFORE the
+    answer and count against max_tokens. Default effort is "medium"; for a
+    schema-filling task like this one "low" is enough and keeps latency down and
+    the token budget free for the actual JSON.
+
+    Sent via extra_body (not as a kwarg) because the pinned groq==0.11.0 SDK
+    does not know the reasoning_effort parameter and would raise TypeError.
+    Only sent to gpt-oss — other models may reject the field.
+    """
+    if model.startswith("openai/gpt-oss"):
+        return {"reasoning_effort": os.environ.get("GROQ_REASONING_EFFORT", "low")}
+    return {}
 
 
 # ──────────────────────────────────────────────
@@ -251,12 +288,13 @@ class GraphGenerationError(Exception):
 def generate_causal_graph(
     decision_text: str,
     session_id: str,
-    model: str = "llama-3.3-70b-versatile",
+    model: Optional[str] = None,
 ) -> CausalGraphOutput:
     """
     Call Groq once, validate, retry once on schema failure.
     Raises GraphGenerationError on both failures — never returns malformed data.
     """
+    model = _resolve_model(model)
     client = Groq(api_key=os.environ["GROQ_API_KEY"])
     lf = _get_langfuse()
 
@@ -290,8 +328,11 @@ def generate_causal_graph(
                     "type": "function",
                     "function": {"name": "generate_causal_graph"}
                 },
-                max_tokens=4096,
+                # 8192, not 4096: gpt-oss reasoning tokens count against this budget,
+                # and a 17-node / 22-edge graph with citations is ~3-4k tokens on its own.
+                max_tokens=8192,
                 temperature=0.25,   # Low temp: consistent structure over creativity
+                extra_body=_extra_body_for(model),
             )
 
             tool_calls = response.choices[0].message.tool_calls
@@ -354,6 +395,18 @@ def generate_causal_graph(
                         f"generate_causal_graph again:\n\n{last_error}"
                     )
                 })
+
+        except (NotFoundError, AuthenticationError, PermissionDeniedError) as e:
+            # Non-retryable: wrong/retired model ID (404), bad API key (401),
+            # or no access to the model (403). A second attempt cannot succeed,
+            # so fail immediately instead of burning a retry and a round-trip.
+            last_error = str(e)
+            if span:
+                span.end(output={"error": last_error})
+            print(f"[effectrace] Non-retryable Groq error (model={model!r}): {last_error}")
+            raise GraphGenerationError(
+                f"Groq rejected the request (model={model!r}): {last_error}"
+            ) from e
 
         except Exception as e:
             last_error = str(e)
@@ -528,7 +581,7 @@ def generate_narrative(
     simulation_outcomes: dict,
     session_id: str,
     focus_nodes: Optional[list] = None,
-    model: str = "llama-3.3-70b-versatile",
+    model: Optional[str] = None,
 ) -> str:
     """
     Generate a ~400-word executive brief from validated graph + simulation data.
@@ -540,6 +593,7 @@ def generate_narrative(
     Raises NarrativeError on failure — the route handler decides whether to return
     a fallback or surface the error to the frontend.
     """
+    model = _resolve_model(model)
     client = Groq(api_key=os.environ["GROQ_API_KEY"])
     lf = _get_langfuse()
 
@@ -556,13 +610,20 @@ def generate_narrative(
                 {"role": "system", "content": NARRATION_SYSTEM_PROMPT},
                 {"role": "user", "content": context_text},
             ],
-            max_tokens=1024,
+            # 2048, not 1024: a ~400-word brief is ~550 tokens, but gpt-oss reasoning
+            # tokens share this budget. At 1024 the model can exhaust it while
+            # "thinking" and return empty content (finish_reason="length").
+            max_tokens=2048,
             temperature=0.4,  # Higher than generation: consistent structure, natural prose
+            extra_body=_extra_body_for(model),
         )
 
         narrative = response.choices[0].message.content
         if not narrative:
-            raise NarrativeError("Groq returned empty content for narration")
+            finish = response.choices[0].finish_reason
+            raise NarrativeError(
+                f"Groq returned empty content for narration (finish_reason={finish!r}, model={model!r})"
+            )
 
         narrative = narrative.strip()
 
