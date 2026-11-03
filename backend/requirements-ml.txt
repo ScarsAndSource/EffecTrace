@@ -1,0 +1,8 @@
+# OFFLINE ONLY — used by `python -m ml.run_all` / `python -m ml.plots`.
+# Deliberately NOT in requirements.txt: sklearn/pandas/statsmodels would bloat the Vercel function.
+# Tested with: python 3.12, numpy 2.4, pandas 3.0, scikit-learn 1.8, statsmodels 0.15.
+numpy>=1.26
+pandas>=2.1
+scikit-learn>=1.4
+statsmodels>=0.14
+matplotlib>=3.8
