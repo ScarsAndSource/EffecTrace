@@ -23,3 +23,7 @@ out/
 Thumbs.db
 
 *.tsbuildinfo
+
+# ml
+backend/ml/data/
+

@@ -30,6 +30,13 @@ app.include_router(scenario_router, prefix="/scenario", tags=["scenario"])
 app.include_router(narrate_router, prefix="/scenario", tags=["scenario"])
 app.include_router(simulate_router, prefix="/scenario", tags=["scenario"])
 
+# Offline-trained ML evidence layer (read-only). Wrapped so it can never take the API down.
+try:
+    from api.routes.ml_report import router as ml_router
+    app.include_router(ml_router, prefix="/ml", tags=["ml"])
+except Exception as e:  # pragma: no cover
+    print(f"[effectrace] ML report router not loaded: {e}")
+
 
 @app.get("/health")
 async def health():
